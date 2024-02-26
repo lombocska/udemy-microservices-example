@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: '@name@'
+    version: '@version@'
+  datasource:
+    pool-prepared-statements: true
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}?useUnicode=true&characterEncoding=utf8
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    generate-ddl: true
+    hibernate:
+      naming-strategy: org.hibernate.cfg.EJB3NamingStrategy
+      ddl-auto: create
+  docker:
+    compose:
+      file: "./docker/docker-compose.yml"
+      profiles.active: "core"
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      transaction-id-prefix: tx-${spring.application.name}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+    consumer:
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      group-id: ${spring.application.name}
+      auto-offset-reset: latest
+      enable-auto-commit: false
+      properties:
+        isolation.level: read_committed
+      client-id: ${spring.application.name}
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8061/eureka/
+
+app:
+  kafka:
+    account.topic: ${ACCOUNT_TOPIC:account-domain-event}
+    search-preference.topic: ${SEARCH_PREFERENCE_TOPIC:search-preference-domain-event}
+    notification.topic: ${NOTIFICATION_TOPIC:notification-domain-event}
+
+logging:
+  level:
+    ROOT: ${APP_ROOT_LOGGING:INFO}
+    com.example.accountcore: DEBUG
+    org.zalando.logbook: TRACE
